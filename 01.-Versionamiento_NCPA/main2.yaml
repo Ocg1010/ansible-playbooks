@@ -1,0 +1,35 @@
+- name: Obtener versiones de NCPA y del sistema operativo
+  hosts: RHEL
+  remote_user: root
+  gather_facts: yes
+  vars:
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+  tasks:
+    - name: Obtener la versión del sistema operativo
+      ansible.builtin.debug:
+        msg: "El sistema operativo es {{ ansible_distribution }} {{ ansible_distribution_version }}"
+      register: os_version
+
+    - name: Obtener versión de NCPA en sistemas RedHat
+      ansible.builtin.shell:
+        cmd: "rpm -qi ncpa | grep Version | awk '{print $3}' | head -n 1"
+      register: ncpa_version_redhat
+      when: ansible_distribution == "RedHat"
+      ignore_errors: yes
+
+    - name: Obtener versión de NCPA en sistemas Ubuntu
+      ansible.builtin.shell:
+        cmd: "dpkg -s ncpa | grep Version | awk '{print $2}'"
+      register: ncpa_version_ubuntu
+      when: ansible_distribution == "Ubuntu"
+      ignore_errors: yes
+
+    - name: Mostrar la versión de NCPA y del sistema operativo
+      ansible.builtin.debug:
+        msg: |
+          Sistema operativo: {{ os_version.msg }}
+          Versión de NCPA: {{
+            (ncpa_version_redhat.stdout | default('No instalado') if ansible_distribution == 'RedHat'
+            else ncpa_version_ubuntu.stdout | default('No instalado'))
+          }}
+

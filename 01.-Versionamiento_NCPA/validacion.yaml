@@ -1,0 +1,24 @@
+- name: Obtener versiones de NCPA y del SO
+  hosts: RHEL
+  remote_user: root
+  gather_facts: yes
+  vars:
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+  tasks:
+    - name: Obtener la versión del sistema operativo
+      ansible.builtin.debug:
+        msg: "El sistema operativo es {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+    - name: Obtener versiones de paquetes instalados
+      ansible.builtin.package_facts:
+
+    - name: Mostrar version de SO y de NCPA
+      ansible.builtin.debug:
+        msg: |
+          Sistema operativo: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          {% if 'ncpa' in ansible_facts.packages %}
+            Versión de NCPA: {{ ansible_facts.packages['ncpa'][0].version }}
+          {% else %}
+            El agente NCPA no está instalado en el sistema.
+          {% endif %}
+
